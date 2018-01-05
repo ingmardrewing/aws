@@ -1,3 +1,4 @@
+// Simplify uploads to AWS
 package aws
 
 import (
@@ -9,17 +10,23 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
+// UploadFile uploads a file found at the given path to the given bucket
+// with the given key and returns the location of the uploaded file
 func UploadFile(path string, bucket string, key string) string {
 	file, err := os.Open(path)
 	if err != nil {
 		log.Fatalln("Unable to open file for upload", err)
 	}
 	defer file.Close()
-	log.Printf("File found at %s, starting aws communication\n", path)
-	log.Printf("with bucket %s and key %s\n", bucket, key)
 
-	sess, _ := session.NewSession()
-	log.Println("AWS session initiated")
+	sess, err := session.NewSession()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Println("AWS session initiated:")
+	log.Printf("Going to upload %s to bucket %s with key %s\n", path, bucket, key)
+
 	uploader := s3manager.NewUploader(sess)
 	uploadInput := &s3manager.UploadInput{
 		Bucket: aws.String(bucket),
